@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>مكتبة القصص</title>
+<style>
+  :root{
+    --pink:#ff4da6; --pink-dark:#e53e95; --green:#119c3e;
+    --card:#ffffffee; --bg:#0f1020; --muted:#777;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family: "Tajawal",system-ui,Arial; color:#fff;
+    min-height:100dvh; background: radial-gradient(60% 60% at 50% 40%, #2a2a44, #111428);
+    background-attachment: fixed;
+  }
+  header{
+    padding:18px 16px; text-align:center; position:sticky; top:0; z-index:5;
+    background: linear-gradient(180deg, rgba(10,10,18,.85), rgba(10,10,18,.4));
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid #ffffff14;
+  }
+  h1{margin:0; font-weight:800; letter-spacing:.5px}
+  .price-note{font-size:14px; color:#ffd1ec; margin-top:6px}
+  .wrap{max-width:1100px; margin:22px auto; padding:0 14px}
+
+  /* أزرار الفئات */
+  .cats{
+    display:grid; gap:14px;
+    grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+  }
+  .cat{
+    background: var(--card); color:#222; border-radius:14px; padding:18px;
+    display:flex; align-items:center; gap:12px; box-shadow: 0 8px 30px #00000033;
+    cursor:pointer; border:1px solid #ffffff40; transition:.2s;
+  }
+  .cat:hover{ transform: translateY(-2px); box-shadow:0 10px 34px #00000055 }
+  .badge{ width:46px; height:46px; border-radius:12px; display:grid; place-items:center;
+    color:#fff; font-size:22px; background:linear-gradient(135deg,var(--pink),#ff7dc0)}
+  .cat b{font-size:17px}
+  .cat small{color:#666; display:block; margin-top:2px}
+
+  /* شريط الأزرار العلوي */
+  .bar{display:flex; gap:10px; justify-content:center; margin:14px 0}
+  .btn{
+    border:none; padding:10px 16px; border-radius:10px; font-weight:700; cursor:pointer;
+  }
+  .btn-pink{ background:var(--pink); color:#fff }
+  .btn-pink:hover{ background:var(--pink-dark)}
+  .btn-green{ background:var(--green); color:#fff }
+  .btn-ghost{ background:transparent; color:#fff; border:1px solid #ffffff3a }
+
+  /* طبقة القفل */
+  .lock{
+    margin:18px 0 24px; padding:14px; border:1px dashed #ffffff40; border-radius:12px;
+    background:#ffffff12; text-align:center
+  }
+  .lock code{background:#00000055; padding:2px 6px; border-radius:6px}
+
+  /* الجاليري (مودال) */
+  .modal{
+    position:fixed; inset:0; display:none; place-items:center; z-index:40;
+    background: rgba(5,5,12,.72); backdrop-filter: blur(6px);
+  }
+  .modal.show{display:grid}
+  .box{
+    width:min(940px,94vw); max-height:86vh; overflow:auto; background:#0f1220;
+    border:1px solid #ffffff2a; border-radius:14px; padding:16px;
+    box-shadow: 0 10px 40px #000;
+  }
+  .box h2{margin:4px 0 14px}
+  .grid{
+    display:grid; gap:12px; grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+  }
+  .card{
+    background:#161a2e; border:1px solid #ffffff1f; border-radius:12px; overflow:hidden;
+  }
+  .cover{
+    width:100%; aspect-ratio:3/4; object-fit:cover; background:#0d0f1a;
+    display:block; filter:saturate(1.05) contrast(1.05);
+  }
+  .card footer{padding:10px; color:#ddd; font-size:14px}
+  .close{
+    position:sticky; top:0; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .x{background:#ff4d6d; border:none; color:#fff; border-radius:10px; padding:8px 12px; cursor:pointer}
+  /* لافتة التحميل */
+  .loading{display:none; align-items:center; gap:10px; color:#ffe8f4; margin-top:8px}
+  .spinner{width:18px;height:18px;border:3px solid #fff3;border-left-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* توست */
+  .toast{position:fixed; bottom:18px; right:18px; background:#111827; color:#fff;
+    border:1px solid #ffffff2a; padding:10px 14px; border-radius:10px; display:none; z-index:50}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 مكتبة القصص</h1>
+  <div class="price-note">الاشتراك الشهري: <b>100 جنيه</b> — يشمل كل الفئات.</div>
+</header>
+
+<div class="wrap">
+
+  <!-- أزرار عامة -->
+  <div class="bar">
+    <button class="btn btn-pink" id="subscribeBtn">اشترك الآن</button>
+    <button class="btn btn-ghost" id="enterCodeBtn">إدخال كود التفعيل</button>
+    <button class="btn btn-green" id="statusBtn">حالة الاشتراك</button>
+  </div>
+
+  <!-- تنبيه القفل -->
+  <div class="lock" id="lockNote">
+    المحتوى مقفول. من فضلك اشترك أولًا عبر فودافون كاش/Instapay ثم ادخل كود التفعيل.
+    للتأكيد عبر واتساب: <a href="https://wa.me/201555555555" target="_blank">اضغط هنا</a> —
+    كود التفعيل الافتراضي للتجربة: <code>VIP2025</code> (غيّريه في الكود).
+  </div>
+
+  <!-- شبكة الفئات -->
+  <div class="cats" id="cats">
+    <div class="cat" data-key="horror">
+      <div class="badge">👻</div>
+      <div><b>قصص رعب</b><small>لعشاق الإثارة والغموض</small></div>
+    </div>
+    <div class="cat" data-key="kids">
+      <div class="badge" style="background:linear-gradient(135deg,#23b1ff,#57ffa1)">🧒</div>
+      <div><b>قصص أطفال</b><small>هادفة ومسلية</small></div>
+    </div>
+    <div class="cat" data-key="romance">
+      <div class="badge" style="background:linear-gradient(135deg,#ff7a7a,#ffb36b)">😎</div>
+      <div><b>بوليسي</b><small>حكايات بطولات</small></div>
+    </div>
+    <div class="cat" data-key="adventure">
+      <div class="badge" style="background:linear-gradient(135deg,#9b72ff,#68d1ff)">🏕️</div>
+      <div><b>مغامرات</b><small>سفر واكتشاف</small></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- مودال الجاليري -->
+<div class="modal" id="modal">
+  <div class="box">
+    <div class="close">
+      <h2 id="galleryTitle">العناوين</h2>
+      <button class="x" id="closeModal">إغلاق</button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>يتم تحميل الأغلفة… لحظات من فضلك</div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ الإعدادات ============ */
+const ACTIVATION_CODE = "VIP2025";         // غيّريه
+const PRICE = 100;                          // سعر الاشتراك
+const WHATSAPP_CONFIRM = "https://wa.me/201555555555?text=أرغب%20في%20الاشتراك%20الشهري%20(100)%20ج";
+document.getElementById('subscribeBtn').onclick = () => window.open(WHATSAPP_CONFIRM,'_blank');
+
+/* روابط أغلفة لكل فئة (استخدمي raw.githubusercontent أو أي CDN) */
+const galleries = {
+  horror: {
+    title: "قصص رعب",
+    covers: [
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800",
+      "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800",
+      "https://images.unsplash.com/photo-1502175353174-a7a70e73b362?q=80&w=800",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800"
+    ]
+  },
+  kids: {
+    title: "قصص أطفال",
+    covers: [
+      "https://images.unsplash.com/photo-1519682337058-a94d519337bc?q=80&w=800",
+      "https://images.unsplash.com/photo-1526328828355-8ec7ee24109c?q=80&w=800",
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=800"
+    ]
+  },
+  romance: {
+    title: " قصص بوليسية ",
+    covers: [
+      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=800",
+      "https://images.unsplash.com/photo-1518444028785-8f6f5a62f48e?q=80&w=800"
+    ]
+  },
+  adventure: {
+    title: "قصص مغامرات",
+    covers: [
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800",
+      "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?q=80&w=800",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800"
+    ]
+  }
+};
+
+/* ============ بوابة الاشتراك ============ */
+const toast = (msg)=>{ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); };
+
+function isSubscribed(){
+  // حفظ اشتراك لمدة 30 يوم
+  const raw = localStorage.getItem('subscribed_until');
+  if(!raw) return false;
+  const until = new Date(raw);
+  return Date.now() < until.getTime();
+}
+function setSubscribed(days=30){
+  const until = new Date(Date.now() + days*24*60*60*1000);
+  localStorage.setItem('subscribed_until', until.toISOString());
+  updateLockNote();
+  toast("تم تفعيل الاشتراك ✅");
+}
+function updateLockNote(){
+  const lock = document.getElementById('lockNote');
+  lock.style.display = isSubscribed()? 'none':'block';
+}
+updateLockNote();
+
+document.getElementById('enterCodeBtn').onclick = ()=>{
+  const code = prompt("من فضلك ادخل كود التفعيل الذي استلمتيه بعد الدفع:");
+  if(!code) return;
+  if(code.trim()===ACTIVATION_CODE){
+    setSubscribed(30);
+  }else{
+    toast("الكود غير صحيح ❌");
+  }
+};
+document.getElementById('statusBtn').onclick = ()=>{
+  if(isSubscribed()){
+    const until = new Date(localStorage.getItem('subscribed_until'));
+    toast("اشتراكك فعّال حتى: " + until.toLocaleDateString('ar-EG'));
+  }else toast("لا يوجد اشتراك فعّال حالياً.");
+};
+
+/* ============ فتح الجاليري مع Preload ============ */
+const cats = document.getElementById('cats');
+const modal = document.getElementById('modal');
+const closeModal = document.getElementById('closeModal');
+const grid = document.getElementById('grid');
+const loading = document.getElementById('loading');
+const title = document.getElementById('galleryTitle');
+
+cats.addEventListener('click', async (e)=>{
+  const card = e.target.closest('.cat');
+  if(!card) return;
+  const key = card.dataset.key;
+
+  if(!isSubscribed()){
+    toast("المحتوى مقفول—اشتركي أولاً 🔒");
+    return;
+  }
+
+  const data = galleries[key];
+  title.textContent = data.title;
+  grid.innerHTML = "";
+  loading.style.display='flex';
+  modal.classList.add('show');
+
+  // تحميل مسبق لكل الصور
+  try{
+    await Promise.all(data.covers.map(preloadImage));
+    // بعد التحميل اعرضها
+    data.covers.forEach((src,i)=>{
+      const item = document.createElement('div');
+      item.className='card';
+      item.innerHTML = `
+        <img class="cover" src="${src}" alt="غلاف ${i+1}">
+        <footer>غلاف ${i+1}</footer>
+      `;
+      grid.appendChild(item);
+    });
+  }catch(err){
+    toast("تعذر تحميل بعض الأغلفة.");
+  }finally{
+    loading.style.display='none';
+  }
+});
+
+closeModal.onclick = ()=> modal.classList.remove('show');
+modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.classList.remove('show'); });
+
+function preloadImage(src){
+  return new Promise((res,rej)=>{
+    const img = new Image();
+    img.onload=()=>res(src);
+    img.onerror=()=>rej(src);
+    img.src = src;
+  });
+}
+</script>
+
+</body>
+</html>
